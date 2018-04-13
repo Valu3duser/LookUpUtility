@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pylab as plt
 from scipy import signal
 
-num_samples = 255
+num_samples = 256
 bit_depth = {   '8 bit' : 255,
                 '10 bit': 1023,
                 '12 bit': 4095,
@@ -61,26 +61,60 @@ class SineTable(LookUpTable):
         plt.ylabel('sin(x)')
         plt.axis('tight')
         plt.show()
-class TriangleTable(LookUpTable):
-    def __init__(self, num_samples, bit_depth, unsigned = True):
+class SawTable(LookUpTable):
+    def __init__(self, num_samples, bit_depth, unsigned = True, type = 'triangle'):
         super().__init__(num_samples, bit_depth, unsigned = True)      
         self._x = np.linspace(0, 1, num_samples)
-        if unsigned ==True:
-            self._y = np.round((bit_depth/2)+ (bit_depth/2)*signal.sawtooth(2 * np.pi * self._x))
+        
+        if type == 'triangle':
+            self._width = 0.5
+        elif type == 'up':
+            self._width = 1
         else:
-            self._y = np.round((bit_depth/2)*signal.sawtooth(2 * np.pi * self._x))
+            self._width = 0
 
-    def plot_triangle(self):
+        if unsigned ==True:
+            self._y = np.round((bit_depth/2)+ (bit_depth/2)*signal.sawtooth(2 * np.pi * self._x,self._width))
+        else:
+            self._y = np.round((bit_depth/2)*signal.sawtooth(2 * np.pi * self._x,self._width))
+    def plot_saw(self):
         plt.plot(self._x, self._y)
         #plt.xlabel('Angle [rad]')
         #plt.ylabel('sin(x)')
         #plt.axis('tight')
         plt.show()
-        signal.
+
+class ExpTable(LookUpTable):
+    def __init__(self, num_samples, bit_depth, unsigned = True):
+        super().__init__(num_samples, bit_depth, unsigned = True)
+
+        self._x = np.linspace(-1, 2, num_samples)
+        self._y =[]
+        self.exp = np.exp(self._x)
+        for i in self.exp:
+            self._y.append(np.round((bit_depth)* i/self.exp[num_samples-1]))
+        #for i in self._y:
+        #    print (i)
+    def plot_exp(self):
+        plt.plot(self._x, self._y)
+        plt.show()
 
 #################### main() #################################################    
 if __name__ == "__main__":
-    lut = TriangleTable(num_samples,255, False)
-    lut.plot_triangle()
-    lut.generate_avr_header('tri.h')
-    lut.generate_csv('tri.csv')
+    lut = ExpTable(num_samples,1024)
+    lut.plot_exp()
+    #lut.generate_avr_header('tri.h')
+    #lut.generate_csv('tri.csv')
+
+
+    #env_linear = np.arange(0, 257.0) / 256.0
+
+    #env_expo = np.exp(4*env_linear)
+
+    #env_expo_norm = []
+
+    #for i in env_expo:
+    #    env_expo_norm.append(i/env_expo[255])
+
+    #plt.plot(env_linear, env_expo_norm)
+    #plt.show()
