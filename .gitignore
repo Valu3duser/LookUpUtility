@@ -102,3 +102,8 @@ ENV/
 
 # visual studio pyproj file
 *.pyproj
+
+# Visual Studio dir and solution
+*.sln
+.vs/
+
