@@ -65,13 +65,13 @@ class SineTable(LookUpTable):
         plt.axis('tight')
         plt.show()
 class SawTable(LookUpTable):
-    def __init__(self, num_samples, bit_depth, unsigned = True, type = 'triangle'):
+    def __init__(self, num_samples, bit_depth, unsigned = True, type = 'Triangle'):
         super().__init__(num_samples, bit_depth, unsigned = True)      
         self._x = np.linspace(0, 1, num_samples)
         
-        if type == 'triangle':
+        if type == 'Triangle':
             self._width = 0.5
-        elif type == 'up':
+        elif type == 'Up Saw':
             self._width = 1
         else:
             self._width = 0
@@ -88,16 +88,35 @@ class SawTable(LookUpTable):
         plt.show()
 
 class ExpTable(LookUpTable):
-    def __init__(self, num_samples, bit_depth, unsigned = True):
+    def __init__(self, num_samples, bit_depth, unsigned = True, type = 'Expo 1'):
         super().__init__(num_samples, bit_depth, unsigned = True)
 
         self._x = np.linspace(-1, 2, num_samples)
         self._y =[]
-        self.exp = np.exp(self._x)
-        for i in self.exp:
-            self._y.append(np.round((bit_depth)* i/self.exp[num_samples-1]))
+        self.temp=[]
+        
+        
+        
+        
+
+           # self._y.append(np.round((bit_depth)* i/np.absolute(self.exp[0])))
         #for i in self._y:
         #    print (i)
+
+        if type == 'Expo 1':
+            self.exp = 1 - np.exp(-1 *self._x)
+            for i in self.exp:
+                self.temp.append(i + np.absolute(self.exp[0]))
+            for i in self.temp:
+                #self._y.append(np.round((bit_depth)* i/self.exp[num_samples-1]))
+                self._y.append(np.round((bit_depth)* i/self.temp[num_samples-1]))
+        else:
+            self.exp =np.exp(self._x)
+            for i in self.exp:
+                self._y.append(np.round((bit_depth)* i/self.exp[num_samples-1]))
+                
+
+
     def plot_exp(self):
         plt.plot(self._x, self._y)
         plt.show()
@@ -127,12 +146,30 @@ if __name__ == "__main__":
             filename = filedialog.asksaveasfilename(filetypes =(("csv files","*.csv"),),defaultextension = ".csv")
         else:
             filename = filedialog.asksaveasfilename(filetypes =(("C Header files","*.h"),),defaultextension = ".h")
-        output_dir_label.config(text = filename)  
+        #output_dir_label.config(text = filename)  
 
     def start():
-        messagebox.askyesno(message = num_samples_choice.get())
-        #print('Hi')
+        if filename == None:
+            messagebox.showerror(message =  'Please select an output location')
+            return
 
+        if wave_choice.get() == 'Sine':
+            lut = SineTable(int(num_samples_choice.get()), bit_depth[bit_dept_choice.get()])
+            
+        elif wave_choice.get() == 'Expo 1' or wave_choice.get() == 'Expo 2':
+            if wave_choice.get() == 'Expo 2':
+                lut = ExpTable(int(num_samples_choice.get()), bit_depth[bit_dept_choice.get()],type ='Expo 2' )
+            else:
+                lut = ExpTable(int(num_samples_choice.get()), bit_depth[bit_dept_choice.get()])
+        else:
+            lut = SawTable(int(num_samples_choice.get()), bit_depth[bit_dept_choice.get()],type = wave_choice.get())
+
+        if v.get() == 1:
+            lut.generate_csv(filename)
+        else:
+            lut.generate_avr_header(filename)
+        messagebox.showinfo(message = (filename + ' written successfully'))
+           
     
 
     f2 = tk.Frame(root)
